@@ -3,7 +3,7 @@ import random
 import time
 
 # Константы
-WIDTH, HEIGHT = 9000, 9000
+WIDTH, HEIGHT = 900, 900
 CELL_SIZE = 3  # Размер ячейки в пикселях
 FPS = 30  # Частота обновления
 
