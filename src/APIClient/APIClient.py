@@ -2,10 +2,12 @@ import aiohttp
 import asyncio
 from typing import Optional, Union
 
+import requests
+import json
 from Utils.Utils import Logger
 
 
-class HTTPClient:
+class HTTPClientAsync:
     def __init__(self, base_url: str, headers: Optional[dict] = None) -> None:
         self.base_url = base_url
         self.headers = headers or {}
@@ -73,22 +75,51 @@ class HTTPClient:
             responses = await asyncio.gather(*tasks)
         return responses
 
+class HTTPClientSync:
+    def __init__(self, base_url):
+        """Инициализация клиента с базовым URL сервера."""
+        self.base_url = base_url
+        self.session = requests.Session()  # Создание сессии для повторного использования соединений
 
-# async def main():
-#     # Инициализация клиента
-#     client = HTTPClient(base_url="https://api.example.com",
-#                         headers={"Authorization": "Bearer YOUR_TOKEN"})
+    def get(self, params=None, headers=None):
+        """
+        Выполняем GET-запрос к серверу.
 
-#     # Пример одиночного GET запроса
-#     response = await client.request("GET", "/data", params={"id": 1})
-#     print(response)
+        :param endpoint: Точка доступа (например, '/game/state').
+        :param params: Параметры запроса (если есть).
+        :param headers: Заголовки запроса (если нужны).
+        :return: Ответ сервера в формате JSON или None в случае ошибки.
+        """
+        endpoint: str = 'play/rounds/magcarp'
+        url = f"{self.base_url}{endpoint}"
+        try:
+            response = self.session.get(url, params=params, headers=headers)
+            response.raise_for_status()  # Проверяем успешность ответа (статус 200)
+            return response.json()  # Предполагаем, что сервер возвращает JSON
+        except requests.RequestException as e:
+            print(f"Ошибка при выполнении GET-запроса: {e}")
+            return None
 
-#     # Пример нескольких запросов
-#     requests = [
-#         {"method": "GET", "endpoint": "/data", "params": {"id": 1}},
-#         {"method": "POST", "endpoint": "/update",
-#           "data": {"id": 1, "value": "new"}}
-#     ]
+    def post(self, data=None, headers=None):
+        """
+        Выполняем POST-запрос к серверу.
 
-#     responses = await client.bulk_request(requests)
-#     print(responses)
+        :param endpoint: Точка доступа (например, '/game/action').
+        :param data: Данные для отправки в формате JSON (или другом).
+        :param headers: Заголовки запроса (если нужны).
+        :return: Ответ сервера в формате JSON или None в случае ошибки.
+        """
+        
+        endpoint: str = 'play/magcarp/player/move'
+        url = f"{self.base_url}{endpoint}"
+        try:
+            response = self.session.post(url, json=data, headers=headers)
+            response.raise_for_status()  # Проверяем успешность ответа (статус 200)
+            return response.json()  # Предполагаем, что сервер возвращает JSON
+        except requests.RequestException as e:
+            print(f"Ошибка при выполнении POST-запроса: {e}")
+            return None
+
+    def close(self):
+        """Закрываем сессию при завершении работы."""
+        self.session.close()
