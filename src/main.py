@@ -6,7 +6,7 @@ import time
 
 from Utils.Utils import DataSaver
 from APIClient.APIClient import HTTPClientSync
-from Graphics.PrintMap import print_map
+from Graphics.PrintMap import print_map, generate_random_array, draw_array
 
 load_dotenv()
 TOKEN: str = '67082a9c3378967082a9c3378c'
