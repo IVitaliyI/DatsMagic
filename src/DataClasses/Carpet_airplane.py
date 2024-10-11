@@ -2,6 +2,7 @@ import networkx as nx
 import enum
 
 from dataclasses import dataclass
+from math import sqrt
 
 @dataclass
 class OurCarpetAirplane:
@@ -20,7 +21,15 @@ class OurCarpetAirplane:
     deathCount: int
     id: str
     status: str
+    
+    def distanse_to(self, coord: tuple[int, int]):
+        return sqrt((self.x - coord[0]) ** 2 + (self.y - coord[0]) ** 2)
 
+    def classification(self, coord: tuple[int, int]):
+        if (self.x - coord[0]) <= 200 and (self.y - coord[1]) <= 200:
+            return True
+        return False
+    
 @dataclass
 class EnemyCarpetAirplane:
     x: int
