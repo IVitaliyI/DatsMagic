@@ -6,6 +6,7 @@ import time
 
 from Utils.Utils import DataSaver
 from APIClient.APIClient import HTTPClientSync
+from Graphics.PrintMap import print_map
 
 load_dotenv()
 TOKEN: str = '67082a9c3378967082a9c3378c'
@@ -24,6 +25,7 @@ def main():
     saver.save_to_file('test1', get_data)
     post_data = client.post(headers=headers)
     saver.save_to_file('post', post_data)
+    print_map()
     
     
 
