@@ -3,10 +3,7 @@ import enum
 
 from dataclasses import dataclass
 
-class Status(enum.Enum):
-    alive: 0
-    dead: 1
-
+@dataclass
 class CarpetAirplane:
     velocity: int
     anomalyAcceleration: int
@@ -18,3 +15,4 @@ class CarpetAirplane:
     deathCount: int
     id: int
     status: int
+    flag: str = 'Enemy'
