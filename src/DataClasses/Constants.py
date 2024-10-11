@@ -27,7 +27,6 @@ class Constants(metaclass=MetaSingleton):
     mapSizeX: int
     mapSizeY: int
     transportRadius: int
-    wantedList: WantedList
     reviveTimeoutSec: int
     name: str
     points: int

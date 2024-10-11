@@ -7,8 +7,8 @@ from DataClasses.Anomaly import Anomaly
 
 class Parser:
     
-    def __init__(self, data: json) -> None:
-        self.data = json.load(data)
+    def __init__(self, data: dict) -> None:
+        self.data = data
     
     def parse_transports(self):
         for transports in self.data['transports']:
@@ -54,8 +54,8 @@ class Parser:
                             )
     
     def parse_constants(self):
-        Constants(mapSizeX=self.data['mapSize']['x'],
-                mapSizeX=self.data['mapSize']['y'],
+        return Constants(mapSizeX=self.data['mapSize']['x'],
+                mapSizeY=self.data['mapSize']['y'],
                 maxAccel=self.data['maxAccel'],
                 maxSpeed=self.data['maxSpeed'],
                 reviveTimeoutSec=self.data['reviveTimeoutSec'],
@@ -78,7 +78,7 @@ class Parser:
                     value=gol['points']
                 )
     
-    def parse_annomalies(self):
+    def parse_anomalies(self):
         for anom in self.data['anomalies']:
             yield Anomaly(
                 x=anom['x'],

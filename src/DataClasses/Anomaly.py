@@ -9,6 +9,6 @@ class Anomaly:
     R1: int
     R2: int
     strength: int
-    
+    id: str
     
     
