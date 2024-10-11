@@ -1,33 +1,26 @@
 # import time
 # import requests
+from dotenv import load_dotenv
+import os
+import time
+import asyncio
 
-# Адрес сервера
-BASE_URL = "http://example.com/game"
+from APIClient.APIClient import HTTPClient
 
-# def get_game_status():
-#     ...
+load_dotenv()
+TOKEN: str = os.getenv("TOKEN")
+BASE_URL: str = 'example.com'
 
-# def decide_action():
-#     ...
-
-# def send_action():
-#     ...
-
-# def game_loop():
-#     pause_duration : float = 2.0 # Начальная длительность паузы
-#     while True:
-#         start_time = time.time()
-
-#         game_state = get_game_status()
-#         if game_state:
-#             # Решаем, какое действие предпринять
-#             action = decide_action(game_state)
-
-#             # Отправляем действие на сервер
-#             result = send_action(action)
-
-#             pause_duration = calculate_pause()
+async def main():
+    start_time = time.time()
+    client: HTTPClient = HTTPClient(BASE_URL, {"Authorization" : TOKEN})
+    requests: list[dict[str, str]] = [{"method": "GET",
+                       "endpoint": "/data", "params": {"id": 1}},
+                      {"method": "POST",
+                       "endpoint": "/update", "data": {"id": 1, "value": "new"}}]
+    responses = await client.bulk_request(requests=requests)
 
 
 if __name__ == "__main__":
     print("Hello world!")
+    # asyncio.run(main())
