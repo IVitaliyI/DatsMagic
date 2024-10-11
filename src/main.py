@@ -8,7 +8,7 @@ from Utils.Utils import DataSaver
 from APIClient.APIClient import HTTPClientSync
 
 load_dotenv()
-TOKEN: str = os.getenv("TOKEN")
+TOKEN: str = '67082a9c3378967082a9c3378c'
 BASE_URL_TEST: str = 'https://games-test.datsteam.dev/'
 BASE_URL_OSN: str = 'https://games.datsteam.dev/'
 headers: dict = {"X-Auth-Token" : TOKEN}
