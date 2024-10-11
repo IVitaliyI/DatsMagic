@@ -90,7 +90,7 @@ class HTTPClientSync:
         :param headers: Заголовки запроса (если нужны).
         :return: Ответ сервера в формате JSON или None в случае ошибки.
         """
-        endpoint: str = 'play/rounds/magcarp'
+        endpoint: str = 'rounds/magcarp'
         url = f"{self.base_url}{endpoint}"
         try:
             response = self.session.get(url, params=params, headers=headers)
