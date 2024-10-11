@@ -9,12 +9,13 @@ from APIClient.APIClient import HTTPClient
 
 load_dotenv()
 TOKEN: str = os.getenv("TOKEN")
-BASE_URL: str = 'example.com'
+BASE_URL_TEST: str = 'http://localhost:8000'
+BASE_URL_OSN: str = 'http://localhost:8000'
 
 async def main():
     start_time = time.time()
     client: HTTPClient = HTTPClient(BASE_URL, {"Authorization" : TOKEN})
-    requests: list[dict[str, str]] = [{"method": "GET",
+    requests: list[dict] = [{"method": "GET",
                        "endpoint": "/data", "params": {"id": 1}},
                       {"method": "POST",
                        "endpoint": "/update", "data": {"id": 1, "value": "new"}}]
@@ -22,5 +23,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    print("Hello world!")
-    # asyncio.run(main())
+    asyncio.run(main()) # расскоментировать при начале работы
