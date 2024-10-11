@@ -9,10 +9,32 @@ class MetaSingleton(type):
         return cls._instances[cls]
 
 @dataclass
+class WantedList:
+    x: int
+    y: int
+    health: int
+    killBounty: int
+    shieldLeftMs: int
+    status: str
+    velX: int
+    velY: int
+    
+
+@dataclass
 class Constants(metaclass=MetaSingleton):
     maxAccel: int
     maxSpeed: int
-    mapSize: int
+    mapSizeX: int
+    mapSizeY: int
     transportRadius: int
-    wantedList: int
+    wantedList: WantedList
     reviveTimeoutSec: int
+    name: str
+    points: int
+    shieldCooldownMs: int
+    shieldTimeMs: int
+    attackDamage: int
+    attackCooldownMs: int
+    attackExplosionRadius: int
+    attackRange: int
+
