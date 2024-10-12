@@ -4,7 +4,7 @@ from typing import Optional
 from APIClient.APIClient import HTTPClientSync
 from Action.Action import GameState
 from Parser.Parser import Parser
-from Action.Action import StrategyChoiceClass
+from Action.Action import StrategyChoiceClass, MaxValuePerDistanceStrategy
 
 from Graphics.Visualizator import Visualizator
 
@@ -33,8 +33,10 @@ class GameLoop:
                 tic += 1
             
             if current_time - last_control_update >= control_interval:
-                control_answer = StrategyChoiceClass().generate_response_server(self.controller.transports) # TODO: метод для генерации управления, возвращает ответ для сервера
-                print(control_answer)
+                control_answer = StrategyChoiceClass(MaxValuePerDistanceStrategy()).generate_response_server(self.controller.transports,
+                                                                                self.controller.anomalies,
+                                                                                self.controller.bounties,
+                                                                                self.controller.enemies) # TODO: метод для генерации управления, возвращает ответ для сервера
                 data = self.server_client.post(data=control_answer)
                 buf_viz = Parser(data)
                 self.controller = GameState(data_obj=buf_viz)

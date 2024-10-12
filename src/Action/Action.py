@@ -5,9 +5,10 @@ import json
 
 
 from Parser.Parser import Parser
-from DataClasses.Carpet_airplane import OurCarpetAirplane
+from DataClasses.Carpet_airplane import OurCarpetAirplane, EnemyCarpetAirplane
 from DataClasses.Gold import Gold
 from DataClasses.Anomaly import Anomaly
+from DataClasses.Constants import WantedList
 
 from Utils.Utils import DataSaver
 
@@ -29,7 +30,7 @@ class GameState:
         self.enemies = self.parse_enemies_view_transport()
     
     def parse_bounderies_view_transport(self):
-        transport_bounties_view: dict[tuple[int,int], list[Gold]] = {}
+        transport_bounties_view: dict[str, list[Gold]] = {}
         for bount in self.data.parse_bounties():
             for transport in self.transports:
                 if transport.id not in transport_bounties_view:
@@ -39,7 +40,7 @@ class GameState:
         return transport_bounties_view
     
     def parse_enemies_view_transport(self):
-        transport_enemies_view: dict[tuple[int,int], list[Gold]] = {}
+        transport_enemies_view: dict[str, list[Gold]] = {}
         for bount in self.data.parse_enemies():
             for transport in self.transports:
                 if transport.id not in transport_enemies_view:
@@ -49,7 +50,7 @@ class GameState:
         return transport_enemies_view
     
     def parse_anomaly_view_transport(self):
-        transport_anomaly_view: dict[tuple[int,int], list[Gold]] = {}
+        transport_anomaly_view: dict[str, list[Gold]] = {}
         for bount in self.data.parse_anomalies():
             for transport in self.transports:
                 if transport.id not in transport_anomaly_view:
@@ -59,7 +60,7 @@ class GameState:
         return transport_anomaly_view
     
     def parse_wanted_list_view_transport(self):
-        transport_wanted_view: dict[tuple[int,int], list[Gold]] = {}
+        transport_wanted_view: dict[str, list[Gold]] = {}
         for bount in self.data.parse_wanted_list():
             for transport in self.transports:
                 if transport.id not in transport_wanted_view:
@@ -67,27 +68,27 @@ class GameState:
                 if transport.classification((bount.x, bount.y)):
                     transport_wanted_view[transport.id].append(bount)
         return transport_wanted_view
-        
-    
-        
-class GameStateForOneTransport(GameState):
-    def __init__(self, transport: OurCarpetAirplane) -> None:
-        self.see_bounties = []
-        # Необходимо один раз пройтись по bounties и классифицировать к какому ковру относятся те или иные монеты
-        # Тоже самое можно сделать и с врагами
-        
-class ActionStrategy(ABC):
+
+class CalculateMove(ABC):
     @abstractmethod
-    def choose_next_gold(self, current_x: int, current_y: int, remaining_gold: list[Gold]) -> Gold:
+    def calculate(self, transport: OurCarpetAirplane,
+                  anomalies: list[Anomaly],
+                  enemies: list[EnemyCarpetAirplane],
+                  bounties: list[Gold],
+                  wanted_list: list[WantedList]):
         pass
 
-class MaxValuePerDistanceStrategy(ActionStrategy):
-    def choose_next_gold(self, current_x: int, current_y: int, remaining_gold: list[Gold]) -> Gold:
+class MaxValuePerDistanceStrategy(CalculateMove):
+    def calculate(self, transport: OurCarpetAirplane,
+                  anomalies: list[Anomaly],
+                  enemies: list[EnemyCarpetAirplane],
+                  bounties: list[Gold],
+                  wanted_list: list[WantedList]):
         best_gold = None
         best_value_to_distance = float('-inf')
         
-        for gold in remaining_gold:
-            distance = euclidean_distance(current_x, current_y, gold.x, gold.y)
+        for gold in bounties:
+            distance = euclidean_distance(transport.x, transport.y, gold.x, gold.y)
             value_to_distance = gold.value / distance  # Отношение ценности к расстоянию
             
             if value_to_distance > best_value_to_distance:
@@ -96,48 +97,30 @@ class MaxValuePerDistanceStrategy(ActionStrategy):
 
         return best_gold
 
-class ClosestGoldStrategy(ActionStrategy):
-    def choose_next_gold(self, current_x: int, current_y: int, remaining_gold: list[Gold]) -> Gold:
-        best_gold = None
-        min_distance = float('inf')
-        
-        for gold in remaining_gold:
-            distance = euclidean_distance(current_x, current_y, gold.x, gold.y)
-            if distance < min_distance:
-                min_distance = distance
-                best_gold = gold
-
-        return best_gold
-
 class StrategyChoiceClass:
-    def __init__(self, strategy: ActionStrategy = None):
-        self.strategy = strategy
-
-    def collect_gold(self, gold_list: list[Gold], transport: OurCarpetAirplane) -> list[Gold]:
-        path = []  # Путь, по которому идёт сбор монеток
-        remaining_gold = gold_list.copy()  # Оставшиеся монетки
-        current_x, current_y = transport.x, transport.y
-        for _ in range(5):
-            # Выбираем следующую монетку согласно выбранной стратегии
-            next_gold = self.strategy.choose_next_gold(current_x, current_y, remaining_gold)
-            if next_gold is None:
-                break
-            
-            # Перемещаемся к выбранной монетке
-            path.append(next_gold)
-            current_x, current_y = next_gold.x, next_gold.y
-            remaining_gold.remove(next_gold)
-
-        return path
+    def __init__(self, strategy: CalculateMove = None):
+        self.strategy: CalculateMove = strategy
     
-    def generate_response_server(self, carpetAirplanes: list[OurCarpetAirplane]):
+    def generate_response_server(self, carpetAirplanes: list[OurCarpetAirplane],
+                                 anomalies: dict[str, Anomaly],
+                                 boundies: dict[str, list[Gold]],
+                                 enemies: dict[str, list[EnemyCarpetAirplane]],
+                                 wanted:  dict[str, list[WantedList]] = {}):
         response: dict[str, list] = {'transports': []}
         for carpet in carpetAirplanes:
-            # data = carpet.calculate()
-            print(carpet.id)
-            data = self._generate_response_server_step(carpet.id)
+            coord: Gold = self.strategy.calculate(transport=carpet, anomalies=anomalies[carpet.id],
+                                    enemies=enemies[carpet.id],
+                                    bounties=boundies[carpet.id],
+                                    wanted_list=wanted.get(carpet.id))
+            print(coord.x, coord.y)
+            phys = PhysicCalculator(carpet, anomalies[carpet.id])
+            try:
+                acc = phys.calculate_control(np.array([coord.x, coord.y]))
+            except:
+                acc = (0,0)
+            data = self._generate_response_server_step(carpet.id, acc)
             response["transports"].append(data)
-            return response
+        return response
     
     @staticmethod
     def _generate_response_server_step(id: str, 
@@ -161,82 +144,99 @@ class StrategyChoiceClass:
         
 
 class PhysicCalculator:
-    def __init__(self, transport: OurCarpetAirplane, anomaly: list[Anomaly]):
+    def __init__(self, transport: OurCarpetAirplane, 
+                 anomaly: list[Anomaly]):
         self.transport: OurCarpetAirplane = transport
         self.anomaly: list[Anomaly] = anomaly
 
-    def external_acceleration(self) -> np.ndarray:
-        """
-        Задаёт внешнее ускорение в зависимости от времени.
-        Пример: меняющееся внешнее ускорение в зависимости от времени.
-        """
-        strength: float = 0
-        napr: np.array = np.array([0,0])
-        for anom in self.anomaly:
-            strength = anom.strength ** 2 / euclidean_distance(self.transport.x, self.transport.y, anom.x, anom.y) ** 2 * np.sign(anom.strength) #TODO: необходимо проверить а будет ли влиять аномалия
-            vector = np.array([anom.x - self.transport.x, anom.y - self.transport.y])
-            napr += vector / np.linalg.norm(vector) * strength 
-        return napr
+    # @staticmethod
+    # def external_acceleration_id_point(coord: tuple[float, float], anomaly: list[Anomaly] = []) -> np.ndarray:
+    #     """
+    #     Задаёт внешнее ускорение в зависимости от времени.
+    #     Пример: меняющееся внешнее ускорение в зависимости от времени.
+    #     """
+    #     strength: float = 0
+    #     napr: np.array = np.array([0,0])
+    #     for anom in anomaly:
+    #         strength = anom.strength ** 2 / euclidean_distance(coord[0], coord[1], anom.x, anom.y) ** 2 * np.sign(anom.strength) #TODO: необходимо проверить а будет ли влиять аномалия
+    #         vector = np.array([anom.x - coord[0], anom.y - coord[1]])
+    #         napr += vector / np.linalg.norm(vector) * strength 
+    #     return napr
 
-    def motion_equation(self, r: np.ndarray, v: np.ndarray, a_control: np.ndarray, t: float, dt: float) -> tuple:
+    def motion_model(self, t, dt, a_ctrl: np.array = np.array([0,0])):
         """
-        Рассчитывает новое положение и скорость с учётом внешнего и управляющего ускорений.
+        Модель движения объекта с учётом внешних и управляющих ускорений.
         
-        r: np.ndarray - текущая позиция (x, y)
-        v: np.ndarray - текущая скорость (vx, vy)
-        a_control: np.ndarray - управляющее ускорение (ax, ay)
+        position: np.array([x, y]) - текущее положение объекта
+        velocity: np.array([vx, vy]) - текущая скорость объекта
+        a_ctrl: np.array([ax, ay]) - управляющее ускорение
         t: float - текущее время
         dt: float - шаг по времени
         
-        Возвращает новое положение и скорость.
+        Возвращает новое положение и скорость объекта.
         """
-        a_ext = self.external_acceleration()  # Внешнее ускорение
+        a_ext = np.array([self.transport.anomalyAccelerationX, self.transport.anomalyAccelerationY])  # Внешнее ускорение
         
-        if n := np.linalg.norm(a_ext) > 10:
-            a_ext = a_ext / n * 10
-        
-        total_acceleration = a_control + a_ext  # Суммарное ускорение
+        # Суммарное ускорение
+        total_acceleration = a_ctrl + a_ext
         
         # Обновляем скорость: v(t+dt) = v(t) + a_total * dt
-        new_v = v + total_acceleration * dt
+        new_velocity = np.array([self.transport.velX, self.transport.velY]) + total_acceleration * dt
         
         # Обновляем положение: r(t+dt) = r(t) + v(t) * dt
-        new_r = r + new_v * dt
+        new_position = np.array([self.transport.x, self.transport.y]) + new_velocity * dt
         
-        return new_r, new_v
+        return new_position, new_velocity
 
-    def simulate_motion(self, r0, v0, rf, max_acceleration, dt=0.33, tolerance=5):
+    def calculate_control(self, target_position, k_p=1.0):
         """
-        Симулирует движение объекта до достижения целевой точки с учётом внешних сил и управляющего ускорения.
+        Рассчитывает управляющее ускорение для движения к цели.
         
-        r0: np.array - начальное положение (x, y)
-        v0: np.array - начальная скорость (vx, vy)
-        rf: np.array - целевая позиция (x, y)
-        max_acceleration: float - максимальное управляющее ускорение
-        dt: float - шаг по времени
-        tolerance: float - допустимая ошибка для достижения цели
+        position: np.array([x, y]) - текущее положение объекта
+        target_position: np.array([x, y]) - целевая точка
+        velocity: np.array([vx, vy]) - текущая скорость объекта
+        k_p: float - коэффициент пропорционального усиления
         
-        Возвращает траекторию движения объекта и финальную скорость.
+        Возвращает управляющее ускорение.
         """
-        trajectory = [r0]
-        t = 0
-        current_r = r0
-        current_v = v0
+        # Ошибка в положении (разница между целевой и текущей позицией)
+        error_position = target_position - np.array([self.transport.x, self.transport.y])
         
-        while np.linalg.norm(current_r - rf) > tolerance:
-            # Направление к цели
-            direction_to_target = (rf - current_r) / np.linalg.norm(rf - current_r)
-            
-            # Рассчитываем управляющее ускорение в направлении цели
-            a_control = direction_to_target * max_acceleration
-            
-            # Обновляем положение и скорость
-            current_r, current_v = self.motion_equation(current_r, current_v, a_control, t, dt)
-            
-            # Сохраняем траекторию
-            trajectory.append(current_r)
-            
-            # Обновляем время
-            t += dt
+        # Внешнее ускорение в текущем положении
+        a_ext = np.array([self.transport.anomalyAccelerationX, self.transport.anomalyAccelerationY])
         
-        return np.array(trajectory), current_v
+        # Пропорциональный контроллер: корректировка с учётом внешнего ускорения
+        a_ctrl = error_position / np.linalg.norm(error_position) * 10 - a_ext
+        
+        return a_ctrl / np.linalg.norm(a_ctrl) * 10
+
+    # def simulate_trajectory(self, target_position, dt=0.33):
+    #     """
+    #     Симуляция движения объекта для достижения цели с учётом управляющих и внешних сил.
+        
+    #     start_position: np.array([x, y]) - начальная позиция объекта
+    #     start_velocity: np.array([vx, vy]) - начальная скорость объекта
+    #     target_position: np.array([x, y]) - целевая точка
+    #     max_time: float - максимальное время симуляции
+    #     dt: float - шаг по времени
+        
+    #     Возвращает траекторию движения и финальное состояние объекта (положение и скорость).
+    #     """
+    #     trajectory = [np.array([self.transport.x, self.transport.y])]
+    #     position = np.array([self.transport.x, self.transport.y])
+    #     velocity = np.array([self.transport.velX, self.transport.velY])
+    #     t = 0
+        
+    #     # Рассчитываем управляющее ускорение
+    #     a_ctrl = self.calculate_control(target_position)
+        
+    #     # Обновляем положение и скорость объекта
+    #     position, velocity = self.motion_model(t, dt, a_ctrl)
+        
+    #     # Сохраняем траекторию
+    #     trajectory.append(position)
+        
+    #     # Обновляем время
+    #     t += dt
+        
+    #     return np.array(trajectory), position, velocity
