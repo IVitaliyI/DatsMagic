@@ -76,12 +76,13 @@ class HTTPClientAsync:
         return responses
 
 class HTTPClientSync:
-    def __init__(self, base_url):
+    def __init__(self, base_url, headers):
         """Инициализация клиента с базовым URL сервера."""
         self.base_url = base_url
+        self.headers = headers
         self.session = requests.Session()  # Создание сессии для повторного использования соединений
 
-    def get(self, params=None, headers=None):
+    def get(self, params=None):
         """
         Выполняем GET-запрос к серверу.
 
@@ -93,14 +94,14 @@ class HTTPClientSync:
         endpoint: str = 'rounds/magcarp'
         url = f"{self.base_url}{endpoint}"
         try:
-            response = self.session.get(url, params=params, headers=headers)
+            response = self.session.get(url, params=params, headers=self.headers)
             response.raise_for_status()  # Проверяем успешность ответа (статус 200)
             return response.json()  # Предполагаем, что сервер возвращает JSON
         except requests.RequestException as e:
             print(f"Ошибка при выполнении GET-запроса: {e}")
             return None
 
-    def post(self, data=None, headers=None):
+    def post(self, data=None):
         """
         Выполняем POST-запрос к серверу.
 
@@ -113,7 +114,7 @@ class HTTPClientSync:
         endpoint: str = 'play/magcarp/player/move'
         url = f"{self.base_url}{endpoint}"
         try:
-            response = self.session.post(url, json=data, headers=headers)
+            response = self.session.post(url, json=data, headers=self.headers)
             response.raise_for_status()  # Проверяем успешность ответа (статус 200)
             return response.json()  # Предполагаем, что сервер возвращает JSON
         except requests.RequestException as e:

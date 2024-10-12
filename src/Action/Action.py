@@ -1,6 +1,7 @@
 from math import sqrt
 from abc import ABC, abstractmethod
 import numpy as np
+import json
 
 
 from Parser.Parser import Parser
@@ -10,28 +11,7 @@ from DataClasses.Anomaly import Anomaly
 
 from Utils.Utils import DataSaver
 
-def generate_response_server(id: str, 
-                                acc: tuple[float, float] = (0, 0), 
-                                activateShield: bool = False, 
-                                attack: tuple[int, int] = None):
-    if attack != None:
-        response = {
-            "transports": {
-                "acceleration": {"x": acc[0], "y": acc[1]},
-                "activateShield": activateShield,
-                "attack": {"x": attack[0], "y": attack[1]},
-                "id": id
-            }
-        }
-    else:
-        response = {
-            "transports": {
-                "acceleration": {"x": acc[0], "y": acc[1]},
-                "activateShield": activateShield,
-                "id": id
-            }
-        }
-    return response
+
 
 def euclidean_distance(x1: int, y1: int, x2: int, y2: int) -> float:
     """Евклидово расстояние между двумя точками."""
@@ -129,8 +109,8 @@ class ClosestGoldStrategy(ActionStrategy):
 
         return best_gold
 
-class GoldCollector:
-    def __init__(self, strategy: ActionStrategy):
+class StrategyChoiceClass:
+    def __init__(self, strategy: ActionStrategy = None):
         self.strategy = strategy
 
     def collect_gold(self, gold_list: list[Gold], transport: OurCarpetAirplane) -> list[Gold]:
@@ -149,6 +129,36 @@ class GoldCollector:
             remaining_gold.remove(next_gold)
 
         return path
+    
+    def generate_response_server(self, carpetAirplanes: list[OurCarpetAirplane]):
+        response: dict[str, list] = {'transports': []}
+        for carpet in carpetAirplanes:
+            # data = carpet.calculate()
+            print(carpet.id)
+            data = self._generate_response_server_step(carpet.id)
+            response["transports"].append(data)
+            return response
+    
+    @staticmethod
+    def _generate_response_server_step(id: str, 
+                                acc: tuple[float, float] = (0, 0), 
+                                activateShield: bool = False, 
+                                attack: tuple[int, int] = None):
+        if attack != None:
+            response = {
+                    "acceleration": {"x": acc[0], "y": acc[1]},
+                    "activateShield": activateShield,
+                    "attack": {"x": attack[0], "y": attack[1]},
+                    "id": id
+            }
+        else:
+            response = {
+                    "acceleration": {"x": acc[0], "y": acc[1]},
+                    "activateShield": activateShield,
+                    "id": id
+            }
+        return response
+        
 
 class PhysicCalculator:
     def __init__(self, transport: OurCarpetAirplane, anomaly: list[Anomaly]):
