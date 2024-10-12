@@ -4,7 +4,11 @@ import time
 import json
 from Utils.Utils import DataSaver
 from APIClient.APIClient import HTTPClientSync
-from DataClasses.Map import Map
+from DataClasses.Map import Map 
+from Action.Action import GameState
+# from Graphics.PrintMap import print_map, generate_random_array, draw_array
+
+
 from Parser.Parser import Parser
 from Graphics.Visualizator import Visualizator
 
@@ -45,15 +49,16 @@ def generate_game_state(data_obj: Parser) -> Map:
     return gameMap
 =======
     # map(gameMap.add_object, data_obj.parse_anomalies())
->>>>>>> 2dbb69b643e0ebd3d77f966ba5a3285e97d886a1
 
+def test2(data_obj: Parser):
+    CONSTANTS = data_obj.parse_constants()
+    dta = GameState(data_obj)
+    
 def test():
     print("Запуск test функции")  # Отладочный принт
     with open(r'C:\Users\kiril\Desktop\hacaton\DatsMagic\buf\round3\session_2024-10-11_21-25-42\post', 'r') as f:
         data_obj = Parser(json.load(f))
-        game_map = generate_game_state(data_obj=data_obj)
-        visualizer = Visualizator()
-        visualizer.visualize_objects(game_map.objects)
+        test2(data_obj=data_obj)
 
 if __name__ == "__main__":
     print("Запуск программы")  # Отладочный принт

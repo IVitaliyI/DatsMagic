@@ -26,7 +26,7 @@ class OurCarpetAirplane:
         return sqrt((self.x - coord[0]) ** 2 + (self.y - coord[0]) ** 2)
 
     def classification(self, coord: tuple[int, int]):
-        if (self.x - coord[0]) <= 200 and (self.y - coord[1]) <= 200:
+        if abs(self.x - coord[0]) <= 600 and abs(self.y - coord[1]) <= 600:
             return True
         return False
     
