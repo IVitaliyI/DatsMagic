@@ -12,7 +12,7 @@ headers = {"X-Auth-Token": TOKEN}
 
 def main():
     server = HTTPClientSync(BASE_URL_TEST, headers=headers)
-    game = GameLoop(server_client=server)
+    game = GameLoop(server_client=server, vizualizer=True)
     try:
         game.start()
     except KeyboardInterrupt:
