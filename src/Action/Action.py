@@ -145,7 +145,7 @@ class AutoActivator(ShieldStrategy):
             return False
         if enemy.shieldLeftMs != 0:
             return False
-        if euclidean_distance(transport.x, transport.y, enemy.x, enemy.y) > Constants().attackRange + Constants().attackExplosionRadius:
+        if euclidean_distance(transport.x, transport.y, enemy.x + enemy.velX * 0.33, enemy.y + enemy.velY * 0.33) > Constants().attackRange + Constants().attackExplosionRadius:
             return False
         return True
     
@@ -175,7 +175,7 @@ class StrategyChoiceClass:
                 
                 attack_coord = None
                 if attack:
-                    attack_coord = (attack.x, attack.y)
+                    attack_coord = (round(attack.x + attack.velX * 0.33), round(attack.y + attack.velY * 0.33))
                     print(attack)
                 
                 phys = PhysicCalculator(carpet, anomalies[carpet.id])
@@ -256,7 +256,7 @@ class PhysicCalculator:
         
         return new_position, new_velocity
 
-    def calculate_control(self, target_position, k_p=1.0):
+    def calculate_control(self, target_position, k_p=8):
         """
         Рассчитывает управляющее ускорение для движения к цели.
         
@@ -274,8 +274,10 @@ class PhysicCalculator:
         a_ext = np.array([self.transport.anomalyAccelerationX, self.transport.anomalyAccelerationY])
         
         # Пропорциональный контроллер: корректировка с учётом внешнего ускорения
-        a_ctrl = error_position / np.linalg.norm(error_position) * 10 - a_ext
-        return a_ctrl / np.linalg.norm(a_ctrl) * 10
+        a_ctrl = k_p * error_position / np.linalg.norm(error_position) - a_ext
+        if np.linalg.norm(a_ctrl) >= 10:
+            return a_ctrl / np.linalg.norm(a_ctrl) * 10
+        return a_ctrl
 
     # def simulate_trajectory(self, target_position, dt=0.33):
     #     """
