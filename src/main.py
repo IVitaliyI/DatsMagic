@@ -8,6 +8,7 @@ import json
 from Utils.Utils import DataSaver
 from APIClient.APIClient import HTTPClientSync
 from DataClasses.Map import Map 
+from Action.Action import GameState
 # from Graphics.PrintMap import print_map, generate_random_array, draw_array
 
 
@@ -45,10 +46,14 @@ def generate_game_state(data_obj: Parser) -> Map:
     [gameMap.add_object(obj) for obj in data_obj.parse_bounties()]
     # map(gameMap.add_object, data_obj.parse_anomalies())
 
+def test2(data_obj: Parser):
+    CONSTANTS = data_obj.parse_constants()
+    dta = GameState(data_obj)
+    
 def test():
     with open('./buf/session_2024-10-11_21-01-45/post', 'r') as f:
         data_obj = Parser(json.load(f))
-        generate_game_state(data_obj=data_obj)
+        test2(data_obj=data_obj)
 
 if __name__ == "__main__":
     # main() # расскоментировать при начале работы
