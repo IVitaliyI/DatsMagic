@@ -11,7 +11,7 @@ BASE_URL_OSN = 'https://games.datsteam.dev/'
 headers = {"X-Auth-Token": TOKEN}
 
 def main():
-    server = HTTPClientSync(BASE_URL_TEST, headers=headers)
+    server = HTTPClientSync(BASE_URL_OSN, headers=headers)
     game = GameLoop(server_client=server, vizualizer=True)
     try:
         game.start()

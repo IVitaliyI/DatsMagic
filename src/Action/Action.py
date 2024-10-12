@@ -218,7 +218,7 @@ class StrategyChoiceClass:
                 phys = PhysicCalculator(carpet, anomalies[carpet.id])
                 if combined_vector is not None:
                     acc = combined_vector * 10
-                    print(acc)
+                    # print(acc)
                 else:
                     acc = (0,0)
                 # acc = phys.calculate_control(np.array([4500,4500]))
@@ -235,14 +235,14 @@ class StrategyChoiceClass:
                                 attack: tuple[int, int] = None):
         if attack != None:
             response = {
-                    "acceleration": {"x": acc[0], "y": acc[1]},
+                    "acceleration": {"x": int(acc[0]), "y": int(acc[1])},
                     "activateShield": activateShield,
-                    "attack": {"x": attack[0], "y": attack[1]},
+                    "attack": {"x": int(attack[0]), "y": int(attack[1])},
                     "id": id
             }
         else:
             response = {
-                    "acceleration": {"x": acc[0], "y": acc[1]},
+                    "acceleration": {"x": int(acc[0]), "y": int(acc[1])},
                     "activateShield": activateShield,
                     "id": id
             }
@@ -313,7 +313,7 @@ class PhysicCalculator:
         
         # Пропорциональный контроллер: корректировка с учётом внешнего ускорения
         a_ctrl = k_p * error_position + k_d * np.array([-self.transport.velX, -self.transport.velY])
-        print(a_ctrl)
+        # print(a_ctrl)
         if np.linalg.norm(a_ctrl) >= 10:
             return a_ctrl / np.linalg.norm(a_ctrl) * 10
         return a_ctrl

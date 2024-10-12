@@ -44,7 +44,7 @@ class GameLoop:
                 self.controller = GameState(data_obj=buf_viz)
                 last_control_update = current_time
                 tic += 1
-                # print(self.controller.transports)
+                # print(self.controller.)
                 # print(time.time() - last_control_update)
             
             if self.vizualizer:
