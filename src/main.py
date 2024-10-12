@@ -1,26 +1,22 @@
-# import time
-# import requests
 from dotenv import load_dotenv
 import os
-import time
-import asyncio
 
-from APIClient.APIClient import HTTPClient
+from GameLoop.GameLoop import GameLoop
+from APIClient.APIClient import HTTPClientSync
 
 load_dotenv()
-TOKEN: str = os.getenv("TOKEN")
-BASE_URL_TEST: str = 'http://localhost:8000'
-BASE_URL_OSN: str = 'http://localhost:8000'
+TOKEN = os.getenv('TOKEN')
+BASE_URL_TEST = 'https://games-test.datsteam.dev/'
+BASE_URL_OSN = 'https://games.datsteam.dev/'
+headers = {"X-Auth-Token": TOKEN}
 
-async def main():
-    start_time = time.time()
-    client: HTTPClient = HTTPClient(BASE_URL, {"Authorization" : TOKEN})
-    requests: list[dict] = [{"method": "GET",
-                       "endpoint": "/data", "params": {"id": 1}},
-                      {"method": "POST",
-                       "endpoint": "/update", "data": {"id": 1, "value": "new"}}]
-    responses = await client.bulk_request(requests=requests)
-
+def main():
+    server = HTTPClientSync(BASE_URL_TEST, headers=headers)
+    game = GameLoop(server_client=server, vizualizer=True)
+    try:
+        game.start()
+    except KeyboardInterrupt:
+        game.stop()
 
 if __name__ == "__main__":
-    asyncio.run(main()) # расскоментировать при начале работы
+    main()

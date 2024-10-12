@@ -28,11 +28,14 @@ class Logger:
 
 
 class DataSaver:
-    def __init__(self) -> None:
-        self.folder_name = self.create_output_folder()
+    def __init__(self, path: str = None) -> None:
+        if path is None:
+            self.folder_name = self.create_output_folder()
+        else:
+            self.folder_name = path
 
     def create_output_folder(self) -> str:
-        folder_name = datetime.now().strftime("session_%Y-%m-%d_%H-%M-%S")
+        folder_name = datetime.now().strftime("buf/round3/session_%Y-%m-%d_%H-%M-%S")
         os.makedirs(folder_name, exist_ok=True)
         Logger.log_info(f"Output folder created: {folder_name}")
         return folder_name
