@@ -96,7 +96,36 @@ class MaxValuePerDistanceStrategy(CalculateMove):
                 best_gold = gold
 
         return best_gold
-    
+
+class AvoidObstaclesAndSeekStartegy(CalculateMove):
+    def calculate(self, transport: OurCarpetAirplane,
+                  anomalies: list[Anomaly],
+                  enemies: list[EnemyCarpetAirplane],
+                  bounties: list[Gold],
+                  wanted_list: list[WantedList]):
+        strategy = MaxValuePerDistanceStrategy()
+        target = strategy.calculate(transport, anomalies, enemies, bounties, wanted_list)
+        
+        if not target:
+            return np.array([0,0])
+        
+        target_vector = np.array([target.x - transport.x, target.y - transport.y])
+        target_distance = np.linalg.norm(target_vector)
+        if target_distance > 0:
+            target_vector = target_vector / target_distance
+        
+        # Избегание препятствий
+        avoidance_vector = np.array([0, 0])
+        for anomaly in anomalies:
+            to_anomaly = np.array([anomaly.x - transport.x, anomaly.y - transport.y])
+            distance = np.linalg.norm(to_anomaly)
+            if distance < 10:  # Радиус избегания
+                avoidance_vector -= to_anomaly / (distance**2)  # Чем ближе, тем сильнее отталкивание
+        
+        # Комбинированный вектор
+        combined_vector = target_vector + avoidance_vector
+        return combined_vector
+        
 class OtherAlgorithm(CalculateMove):
     def calculate(self, transport: OurCarpetAirplane,
                   anomalies: list[Anomaly],
@@ -171,7 +200,7 @@ class StrategyChoiceClass:
         response: dict[str, list] = {'transports': []}
         for carpet in carpetAirplanes:
             if carpet.status == 'alive':
-                coord: Gold = self.strategy.calculate(transport=carpet, anomalies=anomalies[carpet.id],
+                combined_vector: tuple[int, int] = self.strategy.calculate(transport=carpet, anomalies=anomalies[carpet.id],
                                         enemies=enemies[carpet.id],
                                         bounties=boundies[carpet.id],
                                         wanted_list=wanted.get(carpet.id, []))
@@ -187,8 +216,9 @@ class StrategyChoiceClass:
                     # print(attack)
                 
                 phys = PhysicCalculator(carpet, anomalies[carpet.id])
-                if coord is not None:
-                    acc = phys.calculate_control(np.array([coord.x, coord.y]))
+                if combined_vector is not None:
+                    acc = combined_vector * 10
+                    print(acc)
                 else:
                     acc = (0,0)
                 # acc = phys.calculate_control(np.array([4500,4500]))
@@ -287,6 +317,8 @@ class PhysicCalculator:
         if np.linalg.norm(a_ctrl) >= 10:
             return a_ctrl / np.linalg.norm(a_ctrl) * 10
         return a_ctrl
+    
+    
 
     # def simulate_trajectory(self, target_position, dt=0.33):
     #     """

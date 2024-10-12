@@ -4,7 +4,7 @@ from typing import Optional
 from APIClient.APIClient import HTTPClientSync
 from Action.Action import GameState
 from Parser.Parser import Parser
-from Action.Action import StrategyChoiceClass, MaxValuePerDistanceStrategy, AttackAllEnemies, AutoActivator
+from Action.Action import StrategyChoiceClass, MaxValuePerDistanceStrategy, AttackAllEnemies, AutoActivator, AvoidObstaclesAndSeekStartegy
 
 from Graphics.Visualizator import Visualizator
 
@@ -34,7 +34,7 @@ class GameLoop:
                 tic += 1
             
             if current_time - last_control_update >= control_interval:
-                control_answer = StrategyChoiceClass(MaxValuePerDistanceStrategy(), AttackAllEnemies(), AutoActivator()).generate_response_server(self.controller.transports,
+                control_answer = StrategyChoiceClass(AvoidObstaclesAndSeekStartegy(), AttackAllEnemies(), AutoActivator()).generate_response_server(self.controller.transports,
                                                                                 self.controller.anomalies,
                                                                                 self.controller.bounties,
                                                                                 self.controller.enemies,
