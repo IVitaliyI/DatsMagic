@@ -28,7 +28,7 @@ class Visualizator:
                 if isinstance(obj, Anomaly):
                     color = (255, 255, 255)
                     pygame.draw.circle(self.screen, color, scaled_coords, 1)
-                    pygame.draw.circle(self.screen, color, scaled_coords, 200*self.scale, 1)
+                    pygame.draw.circle(self.screen, color, scaled_coords, obj.R2*self.scale, 1)
                 elif isinstance(obj, OurCarpetAirplane):
                     color = (0, 255, 0)
                     pygame.draw.circle(self.screen, color, scaled_coords, 1)
@@ -38,7 +38,7 @@ class Visualizator:
                 elif isinstance(obj, Gold):
                     color = (255, 215, 0)
                     pygame.draw.circle(self.screen, color, scaled_coords, 1)
-                    pygame.draw.circle(self.screen, color, scaled_coords, 5*self.scale, 1)  # Окружность радиусом 5 клеток
+                    pygame.draw.circle(self.screen, color, scaled_coords, obj.R*self.scale, 1)  # Окружность радиусом 5 клеток
             pygame.display.flip()
             #time.sleep(self.update_time)
     
