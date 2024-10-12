@@ -40,8 +40,12 @@ def generate_game_state(data_obj: Parser) -> Map:
     [gameMap.add_object(obj) for obj in data_obj.parse_enemies()]
     [gameMap.add_object(obj) for obj in data_obj.parse_transports()]
     [gameMap.add_object(obj) for obj in data_obj.parse_bounties()]
+<<<<<<< HEAD
     print(gameMap)  # Отладочный принт
     return gameMap
+=======
+    # map(gameMap.add_object, data_obj.parse_anomalies())
+>>>>>>> 2dbb69b643e0ebd3d77f966ba5a3285e97d886a1
 
 def test():
     print("Запуск test функции")  # Отладочный принт
