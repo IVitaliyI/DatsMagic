@@ -15,7 +15,7 @@ class Visualizator:
         pygame.display.set_caption('Визуализация координат')
 
     def visualize_objects(self, objects):
-        while True:
+        #while True:
             for event in pygame.event.get():
                 if (event.type == pygame.QUIT or event.type == pygame.KEYDOWN):
                     pygame.quit()
@@ -24,18 +24,18 @@ class Visualizator:
             for coords, obj in objects.items():
                 scaled_coords = (int(coords[0] * self.scale), int(coords[1] * self.scale))
                 if isinstance(obj, Anomaly):
-                    color = (255, 0, 0)
-                    pygame.draw.circle(self.screen, color, scaled_coords, 2)
-                    pygame.draw.circle(self.screen, color, scaled_coords, 200, 1)
+                    color = (255, 255, 255)
+                    pygame.draw.circle(self.screen, color, scaled_coords, 1)
+                    pygame.draw.circle(self.screen, color, scaled_coords, 200*self.scale, 1)
                 elif isinstance(obj, OurCarpetAirplane):
                     color = (0, 255, 0)
-                    pygame.draw.circle(self.screen, color, scaled_coords, 2)
+                    pygame.draw.circle(self.screen, color, scaled_coords, 1)
                 elif isinstance(obj, EnemyCarpetAirplane):
-                    color = (255, 255, 0)
-                    pygame.draw.circle(self.screen, color, scaled_coords, 2)
+                    color = (255, 0, 0)
+                    pygame.draw.circle(self.screen, color, scaled_coords, 1)
                 elif isinstance(obj, Gold):
                     color = (255, 215, 0)
-                    pygame.draw.circle(self.screen, color, scaled_coords, 2)
-                    pygame.draw.circle(self.screen, color, scaled_coords, 5, 1)  # Окружность радиусом 5 клеток
+                    pygame.draw.circle(self.screen, color, scaled_coords, 1)
+                    pygame.draw.circle(self.screen, color, scaled_coords, 5*self.scale, 1)  # Окружность радиусом 5 клеток
             pygame.display.flip()
-            time.sleep(self.update_time)
+            #time.sleep(self.update_time)
