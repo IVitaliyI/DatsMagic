@@ -46,7 +46,6 @@ class Visualizator:
                 pygame.draw.circle(self.screen, color, scaled_coords, int(obj.R * scale), 1)
 
         pygame.display.flip()
-        time.sleep(self.update_time)
 
     @staticmethod
     def generate_game_state(data_obj: Parser) -> Map:

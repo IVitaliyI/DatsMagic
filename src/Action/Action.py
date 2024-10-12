@@ -2,13 +2,13 @@ from math import sqrt
 from abc import ABC, abstractmethod
 import numpy as np
 import json
-
+from typing import Union
 
 from Parser.Parser import Parser
 from DataClasses.Carpet_airplane import OurCarpetAirplane, EnemyCarpetAirplane
 from DataClasses.Gold import Gold
 from DataClasses.Anomaly import Anomaly
-from DataClasses.Constants import WantedList
+from DataClasses.Constants import WantedList, Constants
 
 from Utils.Utils import DataSaver
 
@@ -97,29 +97,97 @@ class MaxValuePerDistanceStrategy(CalculateMove):
 
         return best_gold
 
+class AttackStrategy(ABC):
+    @abstractmethod
+    def calculate(self, transport: OurCarpetAirplane,
+                  enemies: list[EnemyCarpetAirplane],
+                  wanted_list: list[WantedList]):
+        pass
+
+class AttackAllEnemies(AttackStrategy):
+    def calculate(self, transport: OurCarpetAirplane, 
+                  enemies: list[EnemyCarpetAirplane], 
+                  wanted_list: list[WantedList]):
+        wanted_list.sort(key=lambda x: x.health and self.can_attack(transport, x))
+        enemies.sort(key=lambda x: x.health and self.can_attack(transport, x))
+        if wanted_list != [] and wanted_list[0].health <= Constants().attackDamage:
+            return wanted_list[0]
+        if enemies != []:
+            return enemies[0]
+    
+    @staticmethod
+    def can_attack(transport: OurCarpetAirplane, enemy: Union[EnemyCarpetAirplane, WantedList]):
+        if transport.attackCooldownMs != 0:
+            return False
+        if enemy.shieldLeftMs != 0:
+            return False
+        if euclidean_distance(transport.x, transport.y, enemy.x, enemy.y) > Constants().attackRange:
+            return False
+        return True
+
+class ShieldStrategy(ABC):
+    @abstractmethod
+    def calculate(self, transport: OurCarpetAirplane,
+                  enemies: list[EnemyCarpetAirplane]):
+        pass
+
+class AutoActivator(ShieldStrategy):
+    def calculate(self, transport: OurCarpetAirplane, enemies: list[EnemyCarpetAirplane]):
+        if transport.shieldCooldownMs == 0:
+            for enemy in enemies:
+                if self.can_attack(transport, enemy):
+                    return True
+        return False
+    
+    @staticmethod
+    def can_attack(transport: OurCarpetAirplane, enemy: Union[EnemyCarpetAirplane, WantedList]):
+        if transport.attackCooldownMs != 0:
+            return False
+        if enemy.shieldLeftMs != 0:
+            return False
+        if euclidean_distance(transport.x, transport.y, enemy.x, enemy.y) > Constants().attackRange + Constants().attackExplosionRadius:
+            return False
+        return True
+    
 class StrategyChoiceClass:
-    def __init__(self, strategy: CalculateMove = None):
+    def __init__(self, strategy: CalculateMove = None, attack_strategy: AttackStrategy = None, shield_strategy: ShieldStrategy = None):
         self.strategy: CalculateMove = strategy
+        self.attack_strategy: AttackStrategy = attack_strategy
+        self.shield_strategy: ShieldStrategy = shield_strategy
     
     def generate_response_server(self, carpetAirplanes: list[OurCarpetAirplane],
                                  anomalies: dict[str, Anomaly],
                                  boundies: dict[str, list[Gold]],
                                  enemies: dict[str, list[EnemyCarpetAirplane]],
-                                 wanted:  dict[str, list[WantedList]] = {}):
+                                 wanted:  dict[str, list[WantedList]]):
         response: dict[str, list] = {'transports': []}
         for carpet in carpetAirplanes:
-            coord: Gold = self.strategy.calculate(transport=carpet, anomalies=anomalies[carpet.id],
-                                    enemies=enemies[carpet.id],
-                                    bounties=boundies[carpet.id],
-                                    wanted_list=wanted.get(carpet.id))
-            print(coord.x, coord.y)
-            phys = PhysicCalculator(carpet, anomalies[carpet.id])
-            try:
-                acc = phys.calculate_control(np.array([coord.x, coord.y]))
-            except:
-                acc = (0,0)
-            data = self._generate_response_server_step(carpet.id, acc)
-            response["transports"].append(data)
+            if carpet.status == 'alive':
+                coord: Gold = self.strategy.calculate(transport=carpet, anomalies=anomalies[carpet.id],
+                                        enemies=enemies[carpet.id],
+                                        bounties=boundies[carpet.id],
+                                        wanted_list=wanted.get(carpet.id, []))
+                
+                attack: Union[EnemyCarpetAirplane, WantedList] = self.attack_strategy.calculate(transport=carpet, 
+                                                                         enemies=enemies[carpet.id], 
+                                                                         wanted_list=wanted.get(carpet.id, []))
+                shield: bool = self.shield_strategy.calculate(carpet, enemies[carpet.id])
+                
+                attack_coord = None
+                if attack:
+                    attack_coord = (attack.x, attack.y)
+                    print(attack)
+                
+                phys = PhysicCalculator(carpet, anomalies[carpet.id])
+                if coord is not None:
+                    acc = phys.calculate_control(np.array([coord.x, coord.y]))
+                else:
+                    acc = (0,0)
+                # acc = phys.calculate_control(np.array([4500,4500]))
+                
+                data = self._generate_response_server_step(carpet.id, acc, attack=attack_coord, activateShield=shield)
+                response["transports"].append(data)
+        print(response)
         return response
     
     @staticmethod
@@ -207,7 +275,6 @@ class PhysicCalculator:
         
         # Пропорциональный контроллер: корректировка с учётом внешнего ускорения
         a_ctrl = error_position / np.linalg.norm(error_position) * 10 - a_ext
-        
         return a_ctrl / np.linalg.norm(a_ctrl) * 10
 
     # def simulate_trajectory(self, target_position, dt=0.33):

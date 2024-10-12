@@ -4,6 +4,8 @@ import enum
 from dataclasses import dataclass
 from math import sqrt
 
+from DataClasses.Constants import Constants
+
 @dataclass
 class OurCarpetAirplane:
     x: int
@@ -26,7 +28,7 @@ class OurCarpetAirplane:
         return sqrt((self.x - coord[0]) ** 2 + (self.y - coord[0]) ** 2)
 
     def classification(self, coord: tuple[int, int]):
-        if abs(self.x - coord[0]) <= 600 and abs(self.y - coord[1]) <= 600:
+        if abs(self.x - coord[0]) <= 350 and abs(self.y - coord[1]) <= 350:
             return True
         return False
     

@@ -9,6 +9,10 @@ class Parser:
     
     def __init__(self, data: dict) -> None:
         self.data = data
+        try:
+            self.data['transports']
+        except:
+            print(data)
     
     def parse_transports(self):
         for transports in self.data['transports']:
