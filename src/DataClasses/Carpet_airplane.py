@@ -22,7 +22,7 @@ class OurCarpetAirplane:
     id: str
     status: str
     
-    def distanse_to(self, coord: tuple[int, int]):
+    def euclidean_distance(self, coord: tuple[int, int]):
         return sqrt((self.x - coord[0]) ** 2 + (self.y - coord[0]) ** 2)
 
     def classification(self, coord: tuple[int, int]):
