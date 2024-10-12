@@ -1,0 +1,41 @@
+import pygame
+import sys
+import time
+from DataClasses.Anomaly import Anomaly
+from DataClasses.Gold import Gold
+from DataClasses.Carpet_airplane import OurCarpetAirplane, EnemyCarpetAirplane
+
+class Visualizator:
+    def __init__(self, window_size=(900, 900), update_time=2, scale=0.1):
+        self.window_size = window_size
+        self.update_time = update_time
+        self.scale = scale
+        pygame.init()
+        self.screen = pygame.display.set_mode(self.window_size)
+        pygame.display.set_caption('Визуализация координат')
+
+    def visualize_objects(self, objects):
+        while True:
+            for event in pygame.event.get():
+                if (event.type == pygame.QUIT or event.type == pygame.KEYDOWN):
+                    pygame.quit()
+                    sys.exit()
+            self.screen.fill((0, 0, 0))
+            for coords, obj in objects.items():
+                scaled_coords = (int(coords[0] * self.scale), int(coords[1] * self.scale))
+                if isinstance(obj, Anomaly):
+                    color = (255, 0, 0)
+                    pygame.draw.circle(self.screen, color, scaled_coords, 2)
+                    pygame.draw.circle(self.screen, color, scaled_coords, 200, 1)
+                elif isinstance(obj, OurCarpetAirplane):
+                    color = (0, 255, 0)
+                    pygame.draw.circle(self.screen, color, scaled_coords, 2)
+                elif isinstance(obj, EnemyCarpetAirplane):
+                    color = (255, 255, 0)
+                    pygame.draw.circle(self.screen, color, scaled_coords, 2)
+                elif isinstance(obj, Gold):
+                    color = (255, 215, 0)
+                    pygame.draw.circle(self.screen, color, scaled_coords, 2)
+                    pygame.draw.circle(self.screen, color, scaled_coords, 5, 1)  # Окружность радиусом 5 клеток
+            pygame.display.flip()
+            time.sleep(self.update_time)
