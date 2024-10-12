@@ -96,6 +96,14 @@ class MaxValuePerDistanceStrategy(CalculateMove):
                 best_gold = gold
 
         return best_gold
+    
+class OtherAlgorithm(CalculateMove):
+    def calculate(self, transport: OurCarpetAirplane,
+                  anomalies: list[Anomaly],
+                  enemies: list[EnemyCarpetAirplane],
+                  bounties: list[Gold],
+                  wanted_list: list[WantedList]):
+        return super().calculate(transport, anomalies, enemies, bounties, wanted_list)
 
 class AttackStrategy(ABC):
     @abstractmethod
@@ -176,7 +184,7 @@ class StrategyChoiceClass:
                 attack_coord = None
                 if attack:
                     attack_coord = (round(attack.x + attack.velX * 0.33), round(attack.y + attack.velY * 0.33))
-                    print(attack)
+                    # print(attack)
                 
                 phys = PhysicCalculator(carpet, anomalies[carpet.id])
                 if coord is not None:
@@ -187,7 +195,7 @@ class StrategyChoiceClass:
                 
                 data = self._generate_response_server_step(carpet.id, acc, attack=attack_coord, activateShield=shield)
                 response["transports"].append(data)
-        print(response)
+        # print(response)
         return response
     
     @staticmethod
@@ -256,7 +264,7 @@ class PhysicCalculator:
         
         return new_position, new_velocity
 
-    def calculate_control(self, target_position, k_p=8):
+    def calculate_control(self, target_position, k_p=2, k_d=0.5):
         """
         Рассчитывает управляющее ускорение для движения к цели.
         
@@ -274,7 +282,8 @@ class PhysicCalculator:
         a_ext = np.array([self.transport.anomalyAccelerationX, self.transport.anomalyAccelerationY])
         
         # Пропорциональный контроллер: корректировка с учётом внешнего ускорения
-        a_ctrl = k_p * error_position / np.linalg.norm(error_position) - a_ext
+        a_ctrl = k_p * error_position + k_d * np.array([-self.transport.velX, -self.transport.velY])
+        print(a_ctrl)
         if np.linalg.norm(a_ctrl) >= 10:
             return a_ctrl / np.linalg.norm(a_ctrl) * 10
         return a_ctrl
